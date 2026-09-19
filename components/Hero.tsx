@@ -1,9 +1,18 @@
-export default function Hero() {
+export default function Hero({ logoUrl }: { logoUrl?: string | null }) {
   return (
     <section className="relative flex min-h-screen items-center">
       <div className="mx-auto w-full max-w-6xl px-6 lg:px-8">
         <div className="max-w-xl">
-          <span className="hidden w-fit rounded-xl border border-techblue-400/40 bg-techblue-500/10 px-4 py-1.5 text-sm font-medium text-techblue-400 backdrop-blur-sm md:inline-block">
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="mb-6 h-12 max-w-[220px] object-contain drop-shadow-[0_2px_10px_rgba(7,26,51,0.6)]"
+            />
+          )}
+
+          <span className="hidden w-fit rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/10 px-4 py-1.5 text-sm font-medium text-[var(--brand)] backdrop-blur-sm md:inline-block">
             Ferramenta de orçamento para operadores de drone
           </span>
 
@@ -18,7 +27,7 @@ export default function Hero() {
 
           <a
             href="#calculadora"
-            className="mt-8 inline-block w-fit rounded-lg bg-gold-500 px-7 py-3.5 font-display text-base font-semibold text-navy-900 transition-colors hover:bg-gold-400"
+            className="mt-8 inline-block w-fit rounded-lg bg-[var(--brand)] px-7 py-3.5 font-display text-base font-semibold text-white transition-all hover:brightness-90"
           >
             Calcular meu orçamento
           </a>
