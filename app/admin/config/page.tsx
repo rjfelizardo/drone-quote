@@ -1,10 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { BusinessSettings, DEFAULT_SETTINGS } from "@/lib/settings";
+import CompanySwitcher from "@/components/admin/CompanySwitcher";
 
 export default function AdminConfigPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-surface">
+          <p className="text-navy-700/60">Carregando...</p>
+        </main>
+      }
+    >
+      <AdminConfigInner />
+    </Suspense>
+  );
+}
+
+function AdminConfigInner() {
+  const searchParams = useSearchParams();
+  const companyId = searchParams.get("company") ?? "default";
+
   const [settings, setSettings] = useState<BusinessSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -12,11 +31,12 @@ export default function AdminConfigPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/admin/settings")
+    setLoading(true);
+    fetch(`/api/admin/settings?company=${companyId}`)
       .then((res) => res.json())
       .then((data) => setSettings(data))
       .finally(() => setLoading(false));
-  }, []);
+  }, [companyId]);
 
   function updateField<K extends keyof BusinessSettings>(
     key: K,
@@ -58,15 +78,16 @@ export default function AdminConfigPage() {
   return (
     <main className="min-h-screen bg-surface px-6 py-10 lg:px-10">
       <div className="mx-auto max-w-2xl">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <Link href="/admin" className="text-sm text-navy-700/60 hover:text-navy-700">
+            <Link href={`/admin?company=${companyId}`} className="text-sm text-navy-700/60 hover:text-navy-700">
               ← Voltar ao painel
             </Link>
             <h1 className="mt-2 font-display text-2xl font-semibold text-navy-700">
               Configurações
             </h1>
           </div>
+          <CompanySwitcher basePath="/admin/config" />
         </div>
 
         <form onSubmit={handleSave} className="mt-8 space-y-8">
