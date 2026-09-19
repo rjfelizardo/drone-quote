@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
+import { getSession } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
-  const companyId = request.nextUrl.searchParams.get("company") ?? "default";
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+
+  const requestedCompany = request.nextUrl.searchParams.get("company") ?? "default";
+  const companyId = session.role === "company" ? session.companyId! : requestedCompany;
 
   const { data, error } = await supabaseAdmin
     .from("settings")
@@ -19,8 +26,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+
   const body = await request.json();
-  const companyId = String(body.company_id ?? "default");
+  const companyId =
+    session.role === "company" ? session.companyId! : String(body.company_id ?? "default");
 
   const payload = {
     company_id: companyId,
