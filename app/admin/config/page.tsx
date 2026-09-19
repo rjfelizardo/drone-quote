@@ -178,14 +178,40 @@ function NumberField({
   value: number;
   onChange: (v: number) => void;
 }) {
+  const [text, setText] = useState(String(value));
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setText(String(value));
+  }, [value, focused]);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value;
+    setText(raw);
+    const parsed = Number(raw.replace(",", "."));
+    if (raw.trim() !== "" && !isNaN(parsed)) {
+      onChange(parsed);
+    }
+  }
+
+  function handleBlur() {
+    setFocused(false);
+    const parsed = Number(text.replace(",", "."));
+    if (text.trim() === "" || isNaN(parsed)) {
+      setText(String(value));
+    }
+  }
+
   return (
     <label className="block">
       <span className="text-sm font-medium text-navy-700/70">{label}</span>
       <input
-        type="number"
-        step="0.01"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
+        type="text"
+        inputMode="decimal"
+        value={text}
+        onFocus={() => setFocused(true)}
+        onBlur={handleBlur}
+        onChange={handleChange}
         className="mt-1 w-full rounded-lg border border-navy-700/15 px-3.5 py-2.5 outline-none focus:border-techblue-500"
       />
     </label>
