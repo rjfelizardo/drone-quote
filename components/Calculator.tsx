@@ -175,7 +175,7 @@ export default function Calculator({
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-navy-50">
             <div
-              className="h-full rounded-full bg-techblue-500 transition-all duration-300"
+              className="h-full rounded-full bg-[var(--brand)] transition-all duration-300"
               style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
             />
           </div>
@@ -189,7 +189,7 @@ export default function Calculator({
               value={formatAreaDisplay(areaM2)}
               onChange={(e) => setAreaM2(parseAreaInput(e.target.value))}
               placeholder="Ex: 10.000"
-              className="w-full rounded-lg border border-navy-700/15 px-4 py-3.5 text-lg outline-none focus:border-techblue-500"
+              className="w-full rounded-lg border border-navy-700/15 px-4 py-3.5 text-lg outline-none focus:border-[var(--brand)]"
             />
             <p className="mt-2 text-sm text-navy-700/60">
               Área em m². Você pode digitar com ponto de milhar (ex: 10.000) —
@@ -252,7 +252,7 @@ export default function Calculator({
                     onClick={() => toggleObstacle(key as ObstacleKey)}
                     className={`rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
                       active
-                        ? "border-techblue-500 bg-techblue-500/10 text-techblue-600"
+                        ? "border-[var(--brand)] bg-[var(--brand)]/10 text-[var(--brand)]"
                         : "border-navy-700/15 text-navy-700/80 hover:border-navy-700/30"
                     }`}
                   >
@@ -322,9 +322,9 @@ export default function Calculator({
                     </p>
                   </div>
                 ) : (
-                  <div className="rounded-xl bg-navy-700 p-6 text-white">
+                  <div className="rounded-xl border-t-4 border-[var(--brand)] bg-navy-700 p-6 text-white">
                     <p className="text-sm text-navy-50/70">Estimativa</p>
-                    <p className="font-display text-4xl font-semibold text-gold-500">
+                    <p className="font-display text-4xl font-semibold text-white">
                       {formatCurrency(result.estimatedPrice)}
                     </p>
                     <p className="mt-1 text-sm text-navy-50/70">
@@ -414,8 +414,8 @@ export default function Calculator({
                     }}
                     className={`flex-1 rounded-lg px-6 py-3.5 text-center font-display font-semibold text-white transition-colors ${
                       leadValid
-                        ? "bg-techblue-500 hover:bg-techblue-600"
-                        : "cursor-not-allowed bg-techblue-500/40"
+                        ? "bg-[var(--brand)] hover:brightness-90"
+                        : "cursor-not-allowed bg-[var(--brand)]/40"
                     }`}
                   >
                     Receber orçamento pelo WhatsApp
@@ -435,7 +435,7 @@ export default function Calculator({
                   </p>
                 )}
                 {submitted && (
-                  <p className="mt-2 text-sm font-medium text-techblue-600">
+                  <p className="mt-2 text-sm font-medium text-[var(--brand)]">
                     Recebemos seus dados! Nossa equipe entrará em contato.
                   </p>
                 )}
@@ -516,7 +516,7 @@ function OptionGrid<T extends string>({
             onClick={() => onSelect(key as T)}
             className={`rounded-lg border px-4 py-3.5 text-left transition-colors ${
               active
-                ? "border-techblue-500 bg-techblue-500/10 text-techblue-600"
+                ? "border-[var(--brand)] bg-[var(--brand)]/10 text-[var(--brand)]"
                 : "border-navy-700/15 text-navy-700/80 hover:border-navy-700/30"
             }`}
           >
@@ -549,7 +549,7 @@ function ThreeWayToggle({
           onClick={() => onChange(opt.key)}
           className={`flex-1 rounded-lg border px-4 py-3 font-medium transition-colors ${
             value === opt.key
-              ? "border-techblue-500 bg-techblue-500/10 text-techblue-600"
+              ? "border-[var(--brand)] bg-[var(--brand)]/10 text-[var(--brand)]"
               : "border-navy-700/15 text-navy-700/80"
           }`}
         >
@@ -584,7 +584,7 @@ function LeadField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="mt-1 w-full rounded-lg border border-navy-700/15 px-3.5 py-2.5 outline-none focus:border-techblue-500"
+        className="mt-1 w-full rounded-lg border border-navy-700/15 px-3.5 py-2.5 outline-none focus:border-[var(--brand)]"
       />
     </label>
   );
