@@ -11,6 +11,7 @@ export interface BusinessSettings {
   company_phone: string;
   company_address: string;
   primary_color: string;
+  logo_url: string | null;
   updated_at: string;
 }
 
@@ -27,5 +28,6 @@ export const DEFAULT_SETTINGS: BusinessSettings = {
   company_phone: "",
   company_address: "",
   primary_color: "#1B6FC9",
+  logo_url: null,
   updated_at: "",
 };
