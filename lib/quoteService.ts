@@ -18,12 +18,14 @@ export interface SaveQuoteResult {
 export async function saveLeadAndQuote(
   lead: LeadInput,
   input: QuoteInput,
-  result: QuoteResult
+  result: QuoteResult,
+  companyId: string = "default"
 ): Promise<SaveQuoteResult> {
   try {
     const { data: leadRow, error: leadError } = await supabase
       .from("leads")
       .insert({
+        company_id: companyId,
         name: lead.name,
         company: lead.company,
         whatsapp: lead.whatsapp,
@@ -40,6 +42,7 @@ export async function saveLeadAndQuote(
 
     const { error: quoteError } = await supabase.from("quotes").insert({
       lead_id: leadRow.id,
+      company_id: companyId,
       area_m2: input.areaM2,
       height: input.height,
       surface: input.surface,
