@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function GET() {
-  const { data, error } = await supabaseAdmin
+  const { data: companies, error } = await supabaseAdmin
     .from("settings")
     .select("company_id, company_name")
     .order("company_id", { ascending: true });
@@ -11,7 +11,19 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data ?? []);
+  // Conta quantos leads cada empresa já recebeu, pra mostrar na tela
+  // de gestão (não bloqueia a resposta se falhar, só fica sem o número).
+  const withCounts = await Promise.all(
+    (companies ?? []).map(async (c) => {
+      const { count } = await supabaseAdmin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", c.company_id);
+      return { ...c, lead_count: count ?? 0 };
+    })
+  );
+
+  return NextResponse.json(withCounts);
 }
 
 function slugify(text: string): string {
@@ -66,4 +78,42 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true, company_id: companyId });
+}
+
+export async function DELETE(request: NextRequest) {
+  const { company_id: companyId } = await request.json();
+
+  if (!companyId || companyId === "default") {
+    return NextResponse.json(
+      { error: "Essa empresa não pode ser excluída." },
+      { status: 400 }
+    );
+  }
+
+  // Apaga o histórico de orçamentos e leads dessa empresa antes de
+  // remover a configuração — evita deixar dados órfãos no banco.
+  await supabaseAdmin.from("quotes").delete().eq("company_id", companyId);
+  await supabaseAdmin.from("leads").delete().eq("company_id", companyId);
+
+  // Tenta limpar o logo do Storage também (best-effort — se falhar,
+  // não impede a exclusão da empresa).
+  const { data: files } = await supabaseAdmin.storage
+    .from("logos")
+    .list(companyId);
+  if (files && files.length > 0) {
+    await supabaseAdmin.storage
+      .from("logos")
+      .remove(files.map((f) => `${companyId}/${f.name}`));
+  }
+
+  const { error } = await supabaseAdmin
+    .from("settings")
+    .delete()
+    .eq("company_id", companyId);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
 }
