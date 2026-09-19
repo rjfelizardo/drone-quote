@@ -10,6 +10,7 @@ interface QuoteRow {
   recurrence: string;
   requires_technical_evaluation: boolean;
   created_at: string;
+  [key: string]: unknown;
 }
 
 interface LeadRow {
@@ -18,6 +19,7 @@ interface LeadRow {
   city: string;
   whatsapp: string;
   created_at: string;
+  [key: string]: unknown;
 }
 
 function formatCurrency(value: number): string {
