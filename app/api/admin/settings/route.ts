@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { DEFAULT_SETTINGS } from "@/lib/settings";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const companyId = request.nextUrl.searchParams.get("company") ?? "default";
+
   const { data, error } = await supabaseAdmin
     .from("settings")
     .select("*")
-    .eq("company_id", "default")
+    .eq("company_id", companyId)
     .single();
 
   if (error) {
-    return NextResponse.json(DEFAULT_SETTINGS);
+    return NextResponse.json({ ...DEFAULT_SETTINGS, company_id: companyId });
   }
 
   return NextResponse.json(data);
@@ -18,9 +20,10 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
+  const companyId = String(body.company_id ?? "default");
 
   const payload = {
-    company_id: "default",
+    company_id: companyId,
     base_price_m2: Number(body.base_price_m2),
     minimum_quote: Number(body.minimum_quote),
     travel_cost: Number(body.travel_cost),
