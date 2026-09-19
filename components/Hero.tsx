@@ -3,7 +3,7 @@ export default function Hero() {
     <section className="relative flex min-h-screen items-center">
       <div className="mx-auto w-full max-w-6xl px-6 lg:px-8">
         <div className="max-w-xl">
-          <span className="w-fit rounded-full border border-techblue-400/40 bg-techblue-500/10 px-4 py-1.5 text-sm font-medium text-techblue-400 backdrop-blur-sm">
+          <span className="inline-block w-fit rounded-xl border border-techblue-400/40 bg-techblue-500/10 px-4 py-1.5 text-sm font-medium text-techblue-400 backdrop-blur-sm">
             Ferramenta de orçamento para operadores de drone
           </span>
 
