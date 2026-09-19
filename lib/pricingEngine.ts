@@ -22,6 +22,16 @@ export interface QuoteInput {
   recurrence: RecurrenceKey;
 }
 
+// Parâmetros que vêm do painel administrativo (tabela settings) e
+// substituem os valores padrão de lib/config.ts em tempo de execução.
+export interface QuoteConfigOverrides {
+  basePriceM2?: number;
+  minimumQuote?: number;
+  travelCost?: number;
+  waterCost?: number;
+  powerCost?: number;
+}
+
 export type ComplexityLevel = "BAIXA" | "MÉDIA" | "ALTA" | "ESPECIAL";
 
 export interface QuoteResult {
@@ -61,7 +71,16 @@ function productivityForLevel(level: ComplexityLevel): number {
   return pricingConfig.productivityLevels.complexa;
 }
 
-export function calculateQuote(input: QuoteInput): QuoteResult {
+export function calculateQuote(
+  input: QuoteInput,
+  overrides: QuoteConfigOverrides = {}
+): QuoteResult {
+  const basePriceM2 = overrides.basePriceM2 ?? pricingConfig.basePriceM2;
+  const minimumQuote = overrides.minimumQuote ?? pricingConfig.minimumQuote;
+  const travelCost = overrides.travelCost ?? pricingConfig.travelCost;
+  const waterCost = overrides.waterCost ?? pricingConfig.waterCost;
+  const powerCost = overrides.powerCost ?? pricingConfig.powerCost;
+
   const heightFactor = pricingConfig.heightFactors[input.height].factor;
   const surfaceFactor = pricingConfig.surfaceFactors[input.surface].factor;
   const dirtFactor = pricingConfig.dirtFactors[input.dirtLevel].factor;
@@ -81,7 +100,7 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
 
   const requiresTechnicalEvaluation = reasons.length > 0;
 
-  const basePrice = input.areaM2 * pricingConfig.basePriceM2;
+  const basePrice = input.areaM2 * basePriceM2;
 
   const safeHeightFactor = heightFactor ?? 1.5;
   const safeSurfaceFactor = surfaceFactor ?? 1.3;
@@ -99,10 +118,10 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   const estimatedHours = input.areaM2 / productivity;
   const estimatedDays = estimatedHours / pricingConfig.hoursPerDay;
 
-  const logisticsCost = pricingConfig.travelCost;
+  const logisticsCost = travelCost;
   let additionalCosts = 0;
-  if (input.waterAvailable !== "sim") additionalCosts += pricingConfig.waterCost;
-  if (input.powerAvailable !== "sim") additionalCosts += pricingConfig.powerCost;
+  if (input.waterAvailable !== "sim") additionalCosts += waterCost;
+  if (input.powerAvailable !== "sim") additionalCosts += powerCost;
 
   const recurrenceFactor = pricingConfig.recurrenceDiscounts[input.recurrence].factor;
   const recurrenceDiscount = operationalPrice * (1 - recurrenceFactor);
@@ -110,8 +129,8 @@ export function calculateQuote(input: QuoteInput): QuoteResult {
   let estimatedPrice =
     operationalPrice + logisticsCost + additionalCosts - recurrenceDiscount;
 
-  if (estimatedPrice < pricingConfig.minimumQuote) {
-    estimatedPrice = pricingConfig.minimumQuote;
+  if (estimatedPrice < minimumQuote) {
+    estimatedPrice = minimumQuote;
   }
 
   const estimatedPricePerM2 = estimatedPrice / input.areaM2;
