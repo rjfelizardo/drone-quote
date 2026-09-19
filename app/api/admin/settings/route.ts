@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ ...DEFAULT_SETTINGS, company_id: companyId });
+    return NextResponse.json({ ...DEFAULT_SETTINGS, company_id: companyId, logo_url: null });
   }
 
   return NextResponse.json(data);
