@@ -49,8 +49,8 @@ export default async function CompanyPage({
   }
 
   return (
-    <main>
-      <Hero />
+    <main style={{ "--brand": settings.primary_color } as React.CSSProperties}>
+      <Hero logoUrl={settings.logo_url} />
       <HowItWorks />
       <Calculator settings={settings} />
       <Benefits />
