@@ -6,8 +6,6 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabaseClient";
 import { BusinessSettings, DEFAULT_SETTINGS } from "@/lib/settings";
 
-// Sempre busca a versão mais recente das configurações do painel
-// administrativo — sem isso, o Next poderia cachear o preço antigo.
 export const dynamic = "force-dynamic";
 
 async function getSettings(): Promise<BusinessSettings> {
@@ -24,8 +22,8 @@ export default async function Home() {
   const settings = await getSettings();
 
   return (
-    <main>
-      <Hero />
+    <main style={{ "--brand": settings.primary_color } as React.CSSProperties}>
+      <Hero logoUrl={settings.logo_url} />
       <HowItWorks />
       <Calculator settings={settings} />
       <Benefits />
