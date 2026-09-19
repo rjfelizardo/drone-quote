@@ -1,25 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
-const AUTH_COOKIE = "drone_quote_admin_pw";
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // A página de login e a própria rota de login da API ficam sempre livres.
   if (pathname === "/admin/login" || pathname === "/api/admin/login") {
     return NextResponse.next();
   }
 
-  const cookiePassword = request.cookies.get(AUTH_COOKIE)?.value;
-  const isAuthenticated =
-    !!process.env.ADMIN_PASSWORD && cookiePassword === process.env.ADMIN_PASSWORD;
+  const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = token ? await verifySessionToken(token) : null;
 
-  if (!isAuthenticated) {
-    if (pathname.startsWith("/api/admin")) {
+  const isApi = pathname.startsWith("/api/admin");
+
+  if (!session) {
+    if (isApi) {
       return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
     }
-    const loginUrl = new URL("/admin/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  const isCompaniesArea =
+    pathname.startsWith("/admin/empresas") ||
+    pathname.startsWith("/api/admin/companies");
+
+  if (isCompaniesArea && session.role !== "super_admin") {
+    if (isApi) {
+      return NextResponse.json({ error: "Acesso restrito." }, { status: 403 });
+    }
+    return NextResponse.redirect(new URL("/admin", request.url));
   }
 
   return NextResponse.next();
