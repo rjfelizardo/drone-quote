@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import LogoutButton from "@/components/admin/LogoutButton";
 import CompanySwitcher from "@/components/admin/CompanySwitcher";
+import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +49,13 @@ export default async function AdminDashboard({
 }: {
   searchParams: { company?: string };
 }) {
-  const companyId = searchParams.company ?? "default";
+  const session = await getSession();
+  if (!session) redirect("/admin/login");
+
+  // Uma empresa (role "company") só pode ver o próprio dashboard, não
+  // importa o que peça no parâmetro ?company= da URL.
+  const companyId =
+    session.role === "company" ? session.companyId! : searchParams.company ?? "default";
 
   const { data: quotesData } = await supabaseAdmin
     .from("quotes")
@@ -99,15 +107,23 @@ export default async function AdminDashboard({
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <CompanySwitcher basePath="/admin" />
+            {session.role === "super_admin" && (
+              <>
+                <CompanySwitcher basePath="/admin" />
+                <Link
+                  href="/admin/empresas"
+                  className="text-sm font-medium text-navy-700/70 hover:text-navy-700"
+                >
+                  Gerenciar empresas
+                </Link>
+              </>
+            )}
             <Link
-              href="/admin/empresas"
-              className="text-sm font-medium text-navy-700/70 hover:text-navy-700"
-            >
-              Gerenciar empresas
-            </Link>
-            <Link
-              href={`/admin/config?company=${companyId}`}
+              href={
+                session.role === "super_admin"
+                  ? `/admin/config?company=${companyId}`
+                  : "/admin/config"
+              }
               className="rounded-lg bg-navy-700 px-4 py-2 text-sm font-semibold text-white"
             >
               Configurações
