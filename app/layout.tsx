@@ -31,9 +31,15 @@ export default function RootLayout({
         <div className="fixed inset-0 -z-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            src="/hero-bg-mobile.jpg"
+            alt=""
+            className="block h-full w-full object-cover md:hidden"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/hero-bg.jpg"
             alt=""
-            className="h-full w-full object-cover"
+            className="hidden h-full w-full object-cover md:block"
           />
         </div>
         {children}
