@@ -101,6 +101,12 @@ export default async function AdminDashboard({
           <div className="flex items-center gap-4">
             <CompanySwitcher basePath="/admin" />
             <Link
+              href="/admin/empresas"
+              className="text-sm font-medium text-navy-700/70 hover:text-navy-700"
+            >
+              Gerenciar empresas
+            </Link>
+            <Link
               href={`/admin/config?company=${companyId}`}
               className="rounded-lg bg-navy-700 px-4 py-2 text-sm font-semibold text-white"
             >
