@@ -13,13 +13,18 @@ import {
 } from "@/lib/config";
 import { calculateQuote, QuoteInput } from "@/lib/pricingEngine";
 import { saveLeadAndQuote } from "@/lib/quoteService";
+import { BusinessSettings, DEFAULT_SETTINGS } from "@/lib/settings";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 const TOTAL_STEPS = 7;
 
 const defaultObstacles: ObstacleKey[] = [];
 
-export default function Calculator() {
+export default function Calculator({
+  settings = DEFAULT_SETTINGS,
+}: {
+  settings?: BusinessSettings;
+}) {
   const [step, setStep] = useState<Step>(1);
   const [areaM2, setAreaM2] = useState<string>("");
   const [height, setHeight] = useState<HeightKey>("de10a20");
@@ -54,18 +59,27 @@ export default function Calculator() {
 
   const result = useMemo(() => {
     if (!areaValid) return null;
-    return calculateQuote({
-      areaM2: Number(areaM2),
-      height,
-      surface,
-      dirtLevel,
-      accessDifficulty,
-      obstacles,
-      geometry,
-      waterAvailable,
-      powerAvailable,
-      recurrence,
-    });
+    return calculateQuote(
+      {
+        areaM2: Number(areaM2),
+        height,
+        surface,
+        dirtLevel,
+        accessDifficulty,
+        obstacles,
+        geometry,
+        waterAvailable,
+        powerAvailable,
+        recurrence,
+      },
+      {
+        basePriceM2: settings.base_price_m2,
+        minimumQuote: settings.minimum_quote,
+        travelCost: settings.travel_cost,
+        waterCost: settings.water_cost,
+        powerCost: settings.power_cost,
+      }
+    );
   }, [
     areaM2,
     areaValid,
@@ -78,6 +92,7 @@ export default function Calculator() {
     waterAvailable,
     powerAvailable,
     recurrence,
+    settings,
   ]);
 
   function toggleObstacle(key: ObstacleKey) {
@@ -381,7 +396,11 @@ export default function Calculator() {
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <a
-                    href={leadValid ? `https://wa.me/?text=${whatsappMessage}` : undefined}
+                    href={
+                      leadValid
+                        ? `https://wa.me/${settings.whatsapp_number}?text=${whatsappMessage}`
+                        : undefined
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-disabled={!leadValid}
