@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import LogoutButton from "@/components/admin/LogoutButton";
+import CompanySwitcher from "@/components/admin/CompanySwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -41,15 +42,23 @@ function countBy<T extends Record<string, unknown>>(
   }, {});
 }
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: { company?: string };
+}) {
+  const companyId = searchParams.company ?? "default";
+
   const { data: quotesData } = await supabaseAdmin
     .from("quotes")
     .select("estimated_price, complexity_level, recurrence, requires_technical_evaluation, created_at")
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   const { data: leadsData } = await supabaseAdmin
     .from("leads")
     .select("name, company, city, whatsapp, created_at")
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -67,16 +76,32 @@ export default async function AdminDashboard() {
   return (
     <main className="min-h-screen bg-surface px-6 py-10 lg:px-10">
       <div className="mx-auto max-w-6xl">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="font-display text-2xl font-semibold text-navy-700">
               Painel administrativo
             </h1>
-            <p className="text-sm text-navy-700/60">Drone Quote</p>
+            <p className="text-sm text-navy-700/60">
+              {companyId === "default" ? (
+                "Drone Quote"
+              ) : (
+                <>
+                  {companyId} —{" "}
+                  <a
+                    href={`/c/${companyId}`}
+                    target="_blank"
+                    className="underline hover:text-navy-700"
+                  >
+                    ver calculadora pública
+                  </a>
+                </>
+              )}
+            </p>
           </div>
           <div className="flex items-center gap-4">
+            <CompanySwitcher basePath="/admin" />
             <Link
-              href="/admin/config"
+              href={`/admin/config?company=${companyId}`}
               className="rounded-lg bg-navy-700 px-4 py-2 text-sm font-semibold text-white"
             >
               Configurações
