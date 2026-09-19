@@ -29,6 +29,7 @@ function AdminConfigInner() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -44,6 +45,46 @@ function AdminConfigInner() {
   ) {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setSaved(false);
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("company_id", companyId);
+
+    const res = await fetch("/api/admin/logo", {
+      method: "POST",
+      body: formData,
+    });
+
+    setUploadingLogo(false);
+
+    if (res.ok) {
+      const data = await res.json();
+      setSettings((prev) => ({ ...prev, logo_url: data.logo_url }));
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Não foi possível enviar o logo.");
+    }
+  }
+
+  async function handleLogoRemove() {
+    setUploadingLogo(true);
+    const res = await fetch("/api/admin/logo", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ companyId }),
+    });
+    setUploadingLogo(false);
+    if (res.ok) {
+      setSettings((prev) => ({ ...prev, logo_url: null }));
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -167,6 +208,48 @@ function AdminConfigInner() {
                   className="mt-1 h-11 w-full rounded-lg border border-navy-700/15"
                 />
               </label>
+
+              <div className="sm:col-span-2">
+                <span className="text-sm font-medium text-navy-700/70">Logo</span>
+                <div className="mt-1 flex items-center gap-4">
+                  {settings.logo_url ? (
+                    <img
+                      src={settings.logo_url}
+                      alt="Logo atual"
+                      className="h-14 max-w-[160px] rounded-lg border border-navy-700/15 object-contain p-2"
+                    />
+                  ) : (
+                    <div className="flex h-14 w-24 items-center justify-center rounded-lg border border-dashed border-navy-700/20 text-xs text-navy-700/40">
+                      Sem logo
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <label className="cursor-pointer text-sm font-medium text-techblue-600 hover:text-techblue-500">
+                      {uploadingLogo ? "Enviando..." : "Enviar logo"}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={handleLogoUpload}
+                        disabled={uploadingLogo}
+                        className="hidden"
+                      />
+                    </label>
+                    {settings.logo_url && (
+                      <button
+                        type="button"
+                        onClick={handleLogoRemove}
+                        disabled={uploadingLogo}
+                        className="text-left text-sm text-red-600 hover:text-red-500"
+                      >
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-navy-700/50">
+                  PNG, JPG, WEBP ou SVG — até 2 MB.
+                </p>
+              </div>
             </div>
           </fieldset>
 
