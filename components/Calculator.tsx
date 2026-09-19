@@ -127,7 +127,8 @@ export default function Calculator({
         powerAvailable,
         recurrence,
       },
-      result
+      result,
+      settings.company_id
     );
 
     setSubmitting(false);
