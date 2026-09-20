@@ -77,8 +77,52 @@ export async function generateQuotePdf(data: QuotePdfData): Promise<Uint8Array> 
     advance();
   }
 
-  // Cabeçalho
-  drawText(settings.company_name || "Drone Quote", { size: 20, font: fontBold, color: navy });
+  // Logo da empresa (opcional) — só embute PNG ou JPG, que é o que
+  // pdf-lib sabe desenhar. WEBP e SVG são ignorados aqui (a calculadora
+  // continua aceitando esses formatos pro site, só não vão pro PDF).
+  let logoEmbedded = false;
+  if (settings.logo_url) {
+    try {
+      const logoResponse = await fetch(settings.logo_url);
+      const contentType = logoResponse.headers.get("content-type") ?? "";
+      const logoBytes = new Uint8Array(await logoResponse.arrayBuffer());
+
+      let logoImage = null;
+      if (contentType.includes("png")) {
+        logoImage = await pdfDoc.embedPng(logoBytes);
+      } else if (contentType.includes("jpeg") || contentType.includes("jpg")) {
+        logoImage = await pdfDoc.embedJpg(logoBytes);
+      }
+
+      if (logoImage) {
+        const maxHeight = 42;
+        const scale = maxHeight / logoImage.height;
+        const logoWidth = logoImage.width * scale;
+
+        page.drawImage(logoImage, {
+          x: marginX,
+          y: y - maxHeight + 12,
+          width: logoWidth,
+          height: maxHeight,
+        });
+
+        logoEmbedded = true;
+      }
+    } catch {
+      // Se o logo não carregar por qualquer motivo, o PDF segue sem
+      // ele — nunca deixamos isso quebrar a geração do orçamento.
+    }
+  }
+
+  // Cabeçalho: logo OU nome da empresa, nunca os dois — evita
+  // redundância visual quando a empresa já tem identidade própria.
+  if (!logoEmbedded) {
+    drawText(settings.company_name || "Drone Quote", {
+      size: 20,
+      font: fontBold,
+      color: navy,
+    });
+  }
   advance(28);
   drawText("Orçamento de Serviço — Limpeza de Fachada com Drone", {
     size: 13,
