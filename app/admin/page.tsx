@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import LogoutButton from "@/components/admin/LogoutButton";
 import CompanySwitcher from "@/components/admin/CompanySwitcher";
+import PublicLinkCard from "@/components/admin/PublicLinkCard";
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -130,6 +131,10 @@ export default async function AdminDashboard({
             </Link>
             <LogoutButton />
           </div>
+        </div>
+
+        <div className="mt-6">
+          <PublicLinkCard companyId={companyId} />
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
