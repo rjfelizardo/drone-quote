@@ -14,6 +14,7 @@ import {
 import { calculateQuote, QuoteInput } from "@/lib/pricingEngine";
 import { saveLeadAndQuote } from "@/lib/quoteService";
 import { BusinessSettings, DEFAULT_SETTINGS } from "@/lib/settings";
+import CalculatorPreview from "./CalculatorPreview";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 const TOTAL_STEPS = 7;
@@ -164,7 +165,7 @@ export default function Calculator({
 
   return (
     <section id="calculadora" className="relative bg-surface px-6 py-20 lg:px-8">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
       <div className="rounded-2xl bg-card p-6 shadow-[0_1px_2px_rgba(11,37,69,0.06),0_12px_32px_-16px_rgba(11,37,69,0.25)] md:p-10">
         <div className="mb-8">
           <div className="flex items-center justify-between text-sm text-navy-700/60">
@@ -474,6 +475,8 @@ export default function Calculator({
           )}
         </div>
       </div>
+
+      <CalculatorPreview areaValid={areaValid} result={result} />
       </div>
     </section>
   );
