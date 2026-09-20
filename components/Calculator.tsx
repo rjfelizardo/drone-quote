@@ -48,6 +48,8 @@ export default function Calculator({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const areaValid = Number(areaM2) > 0;
 
@@ -102,32 +104,40 @@ export default function Calculator({
     );
   }
 
+  function getLeadPayload() {
+    return {
+      name: leadName,
+      company: leadCompany,
+      whatsapp: leadWhatsapp,
+      email: leadEmail,
+      city: leadCity,
+      role: leadRole,
+    };
+  }
+
+  function getInputPayload(): QuoteInput {
+    return {
+      areaM2: Number(areaM2),
+      height,
+      surface,
+      dirtLevel,
+      accessDifficulty,
+      obstacles,
+      geometry,
+      waterAvailable,
+      powerAvailable,
+      recurrence,
+    };
+  }
+
   async function handleSaveLead() {
     if (!leadValid || !result || submitting) return;
     setSubmitting(true);
     setSubmitError(null);
 
     const { success, error } = await saveLeadAndQuote(
-      {
-        name: leadName,
-        company: leadCompany,
-        whatsapp: leadWhatsapp,
-        email: leadEmail,
-        city: leadCity,
-        role: leadRole,
-      },
-      {
-        areaM2: Number(areaM2),
-        height,
-        surface,
-        dirtLevel,
-        accessDifficulty,
-        obstacles,
-        geometry,
-        waterAvailable,
-        powerAvailable,
-        recurrence,
-      },
+      getLeadPayload(),
+      getInputPayload(),
       result,
       settings.company_id
     );
@@ -140,28 +150,51 @@ export default function Calculator({
     }
   }
 
+  async function handleDownloadPdf() {
+    if (!leadValid || !result || downloading) return;
+    setDownloading(true);
+    setDownloadError(null);
+
+    handleSaveLead();
+
+    try {
+      const res = await fetch("/api/quote-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lead: getLeadPayload(),
+          input: getInputPayload(),
+          settings,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Não foi possível gerar o PDF.");
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "orcamento-drone-quote.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : "Não foi possível gerar o PDF.");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   function next() {
     if (step < TOTAL_STEPS) setStep((s) => (s + 1) as Step);
   }
   function back() {
     if (step > 1) setStep((s) => (s - 1) as Step);
   }
-
-  const whatsappMessage = result
-    ? encodeURIComponent(
-        `Olá! Meu nome é ${leadName}, da empresa ${leadCompany}.\n` +
-          `Gostaria de solicitar uma avaliação para limpeza de fachada.\n` +
-          `Cidade: ${leadCity}\n` +
-          `E-mail: ${leadEmail}\n` +
-          `Área aproximada: ${formatAreaDisplay(areaM2)} m²\n` +
-          `Altura: ${pricingConfig.heightFactors[height].label}\n` +
-          `Superfície: ${pricingConfig.surfaceFactors[surface].label}\n` +
-          `Nível de sujeira: ${pricingConfig.dirtFactors[dirtLevel].label}\n` +
-          `Acesso: ${pricingConfig.accessFactors[accessDifficulty].label}\n` +
-          `Estimativa apresentada: ${formatCurrency(result.estimatedPrice)}\n` +
-          `Gostaria de agendar uma avaliação técnica.`
-      )
-    : "";
 
   return (
     <section id="calculadora" className="relative bg-surface px-6 py-20 lg:px-8">
@@ -396,44 +429,37 @@ export default function Calculator({
                   </div>
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href={
-                      leadValid
-                        ? `https://wa.me/${settings.whatsapp_number}?text=${whatsappMessage}`
-                        : undefined
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-disabled={!leadValid}
-                    onClick={(e) => {
-                      if (!leadValid) {
-                        e.preventDefault();
-                        return;
-                      }
-                      handleSaveLead();
-                    }}
-                    className={`flex-1 rounded-lg px-6 py-3.5 text-center font-display font-semibold text-white transition-colors ${
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    disabled={!leadValid || downloading}
+                    onClick={handleDownloadPdf}
+                    className={`w-full rounded-lg px-6 py-3.5 text-center font-display font-semibold text-white transition-colors sm:w-auto ${
                       leadValid
                         ? "bg-[var(--brand)] hover:brightness-90"
                         : "cursor-not-allowed bg-[var(--brand)]/40"
                     }`}
                   >
-                    Receber orçamento pelo WhatsApp
-                  </a>
+                    {downloading ? "Gerando PDF..." : "Baixar orçamento"}
+                  </button>
+                </div>
+                <div className="mt-3">
                   <button
                     type="button"
                     disabled={!leadValid || submitting}
                     onClick={handleSaveLead}
-                    className="flex-1 rounded-lg border border-navy-700/20 px-6 py-3.5 text-center font-display font-semibold text-navy-700 transition-colors hover:bg-navy-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="text-sm font-medium text-navy-700/70 underline decoration-navy-700/30 underline-offset-2 hover:text-navy-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {submitting ? "Enviando..." : "Solicitar avaliação técnica"}
+                    {submitting ? "Enviando..." : "Só quero solicitar avaliação técnica, sem baixar nada"}
                   </button>
                 </div>
                 {!leadValid && (
                   <p className="mt-2 text-xs text-navy-700/50">
                     Preencha nome, empresa, WhatsApp, e-mail e cidade pra continuar.
                   </p>
+                )}
+                {downloadError && (
+                  <p className="mt-2 text-sm text-red-600">{downloadError}</p>
                 )}
                 {submitted && (
                   <p className="mt-2 text-sm font-medium text-[var(--brand)]">
